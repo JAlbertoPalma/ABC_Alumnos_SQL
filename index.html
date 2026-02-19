@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asignación 3 - Sistema Escolar</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #64748b;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --bg: #f8fafc;
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            background-color: #1e293b;
+            color: white;
+            width: 100%;
+            padding: 1rem 0;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Navegación por pestañas */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--secondary);
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* Formularios */
+        .form-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        input, select {
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            outline: none;
+        }
+
+        button {
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+
+        button:hover { opacity: 0.8; }
+
+        .btn-add { background-color: var(--success); color: white; }
+        .btn-del { background-color: var(--danger); color: white; padding: 5px 10px; font-size: 0.8em; }
+
+        /* Tablas */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th {
+            background-color: #f8fafc;
+            text-align: left;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .hidden { display: none; }
+        
+        .empty-msg {
+            text-align: center;
+            color: #94a3b8;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Gestión de Alumnos y Carreras</h1>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-btn active" id="btn-alumnos">Alumnos</button>
+            <button class="tab-btn" id="btn-carreras">Carreras</button>
+        </div>
+
+        <div id="section-alumnos">
+            <h3>Agregar Nuevo Alumno</h3>
+            <div class="form-section">
+                <input type="text" id="aln-nombre" placeholder="Nombre del alumno">
+                <input type="number" id="aln-edad" placeholder="Edad">
+                <button class="btn-add" id="add-alumno">Agregar</button>
+            </div>
+
+            <h3>Listado de Alumnos</h3>
+            <table id="tabla-alumnos">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Edad</th>
+                        <th>Carrera Asignada</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-alumnos">
+                    </tbody>
+            </table>
+        </div>
+
+        <div id="section-carreras" class="hidden">
+            <h3>Agregar Nueva Carrera</h3>
+            <div class="form-section">
+                <input type="text" id="car-nombre" placeholder="Nombre de la carrera">
+                <button class="btn-add" id="add-carrera">Crear Carrera</button>
+            </div>
+
+            <h3>Listado de Carreras</h3>
+            <table id="tabla-carreras">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre de Carrera</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-carreras">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
