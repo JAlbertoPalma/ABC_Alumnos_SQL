@@ -28,13 +28,15 @@ async function render() {
             fetch(`${API_URL}/carreras`)
         ]);
 
+        if (!resAlu.ok || !resCar.ok) throw new Error('Error al obtener datos del servidor');
+
         const alumnos = await resAlu.json();
         const carreras = await resCar.json();
 
         renderAlumnos(alumnos, carreras);
         renderCarreras(carreras);
     } catch (error) {
-        console.error("Error al conectar con el servidor:", error);
+        console.error("Error en el render:", error);
     }
 }
 
@@ -56,7 +58,9 @@ function renderAlumnos(alumnos, carreras) {
                 <select onchange="asignarCarrera(${aln.id}, this.value)">
                     <option value="">Sin asignar</option>
                     ${carreras.map(c => `
-                        <option value="${c.id}" ${c.id == aln.carreraId ? 'selected' : ''}>${c.nombre}</option>
+                        <option value="${c.id}" ${c.id == aln.idCarrera ? 'selected' : ''}>
+                            ${c.nombre}
+                        </option>
                     `).join('')}
                 </select>
             </td>
@@ -69,6 +73,11 @@ function renderAlumnos(alumnos, carreras) {
 function renderCarreras(carreras) {
     const lista = document.getElementById('lista-carreras');
     lista.innerHTML = '';
+
+    if (carreras.length === 0) {
+        lista.innerHTML = '<tr><td colspan="3" class="empty-msg">No hay carreras registradas</td></tr>';
+        return;
+    }
 
     carreras.forEach(car => {
         const tr = document.createElement('tr');
@@ -84,45 +93,63 @@ function renderCarreras(carreras) {
 document.getElementById('add-alumno').onclick = async () => {
     const nombre = document.getElementById('aln-nombre').value;
     const edad = document.getElementById('aln-edad').value;
-    if(nombre && edad) {
+    
+    if (nombre && edad) {
         await fetch(`${API_URL}/alumnos`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nombre, edad })
         });
+        document.getElementById('aln-nombre').value = '';
+        document.getElementById('aln-edad').value = '';
         render();
     }
 };
 
 document.getElementById('add-carrera').onclick = async () => {
     const nombre = document.getElementById('car-nombre').value;
-    if(nombre) {
+    
+    if (nombre) {
         await fetch(`${API_URL}/carreras`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nombre })
         });
+        document.getElementById('car-nombre').value = '';
         render();
     }
 };
 
-window.borrarAlumno = async (id) => { 
-    await fetch(`${API_URL}/alumnos/${id}`, { method: 'DELETE' }); 
-    render(); 
+window.borrarAlumno = async (id) => {
+    if (confirm('¿Estás seguro de borrar este alumno?')) {
+        await fetch(`${API_URL}/alumnos/${id}`, { method: 'DELETE' });
+        render();
+    }
 };
 
-window.borrarCarrera = async (id) => { 
-    await fetch(`${API_URL}/carreras/${id}`, { method: 'DELETE' }); 
-    render(); 
+window.borrarCarrera = async (id) => {
+    if (confirm('¿Estás seguro de borrar esta carrera? Los alumnos quedarán sin asignar.')) {
+        const res = await fetch(`${API_URL}/carreras/${id}`, { method: 'DELETE' });
+        if (!res.ok) {
+            alert("Error: Revisa que tu base de datos tenga correctamente el ON DELETE SET NULL");
+        }
+        render();
+    }
 };
 
-window.asignarCarrera = async (alnId, carId) => { 
-    await fetch(`${API_URL}/alumnos/asignar`, {
+window.asignarCarrera = async (alumnoId, idCarrera) => {
+    const res = await fetch(`${API_URL}/alumnos/asignar`, {
         method: 'PUT',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ alumnoId: alnId, carreraId: carId || null })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            alumnoId: alumnoId, 
+            idCarrera: idCarrera === "" ? null : idCarrera 
+        })
     });
-    render(); 
+    if (!res.ok) {
+        alert("Error al intentar asignar la carrera en el servidor.");
+    }
+    render();
 };
 
 render();

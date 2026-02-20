@@ -3,6 +3,6 @@ export class Alumno {
         this.id = id;
         this.nombre = nombre;
         this.edad = edad;
-        this.carreraId = null;
+        this.idCarrera = null;
     }
 }
