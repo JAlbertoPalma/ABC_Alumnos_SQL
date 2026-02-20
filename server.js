@@ -51,7 +51,17 @@ app.get('/api/carreras', async (req, res) => {
 
 
 //Agregar alumno
-
+app.post('/api/alumnos', async (req, res) => {
+    try {
+        const { nombre, edad } = req.body;
+        const conn = await mysql.createConnection(dbConfig);
+        const [result] = await conn.execute('INSERT INTO alumnos (nombre, edad) VALUES (?, ?)', [nombre, edad]);
+        await conn.end();
+        res.json({ id: result.insertId, nombre, edad });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 //Asignar carrera
 
