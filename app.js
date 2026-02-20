@@ -1,6 +1,4 @@
-import { GestionEscolar } from './services/GestionEscolar.js';
-
-const sistema = new GestionEscolar();
+const API_URL = 'http://localhost:3000/api';
 
 const secAlumnos = document.getElementById('section-alumnos');
 const secCarreras = document.getElementById('section-carreras');
@@ -23,31 +21,41 @@ btnCarreras.addEventListener('click', () => {
     render();
 });
 
-function render() {
-    renderAlumnos();
-    renderCarreras();
+async function render() {
+    try {
+        const [resAlu, resCar] = await Promise.all([
+            fetch(`${API_URL}/alumnos`),
+            fetch(`${API_URL}/carreras`)
+        ]);
+
+        const alumnos = await resAlu.json();
+        const carreras = await resCar.json();
+
+        renderAlumnos(alumnos, carreras);
+        renderCarreras(carreras);
+    } catch (error) {
+        console.error("Error al conectar con el servidor:", error);
+    }
 }
 
-function renderAlumnos() {
+function renderAlumnos(alumnos, carreras) {
     const lista = document.getElementById('lista-alumnos');
     lista.innerHTML = '';
     
-    if (sistema.alumnos.length === 0) {
+    if (alumnos.length === 0) {
         lista.innerHTML = '<tr><td colspan="4" class="empty-msg">No hay alumnos registrados</td></tr>';
         return;
     }
 
-    sistema.alumnos.forEach(aln => {
+    alumnos.forEach(aln => {
         const tr = document.createElement('tr');
-        const carreraActual = sistema.carreras.find(c => c.id == aln.carreraId);
-        
         tr.innerHTML = `
             <td>${aln.nombre}</td>
             <td>${aln.edad}</td>
             <td>
                 <select onchange="asignarCarrera(${aln.id}, this.value)">
                     <option value="">Sin asignar</option>
-                    ${sistema.carreras.map(c => `
+                    ${carreras.map(c => `
                         <option value="${c.id}" ${c.id == aln.carreraId ? 'selected' : ''}>${c.nombre}</option>
                     `).join('')}
                 </select>
@@ -58,11 +66,11 @@ function renderAlumnos() {
     });
 }
 
-function renderCarreras() {
+function renderCarreras(carreras) {
     const lista = document.getElementById('lista-carreras');
     lista.innerHTML = '';
 
-    sistema.carreras.forEach(car => {
+    carreras.forEach(car => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${car.id}</td>
@@ -73,25 +81,48 @@ function renderCarreras() {
     });
 }
 
-document.getElementById('add-alumno').onclick = () => {
+document.getElementById('add-alumno').onclick = async () => {
     const nombre = document.getElementById('aln-nombre').value;
     const edad = document.getElementById('aln-edad').value;
     if(nombre && edad) {
-        sistema.agregarAlumno(Date.now(), nombre, edad);
+        await fetch(`${API_URL}/alumnos`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ nombre, edad })
+        });
         render();
     }
 };
 
-document.getElementById('add-carrera').onclick = () => {
+document.getElementById('add-carrera').onclick = async () => {
     const nombre = document.getElementById('car-nombre').value;
     if(nombre) {
-        sistema.agregarCarrera(Date.now(), nombre);
+        await fetch(`${API_URL}/carreras`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ nombre })
+        });
         render();
     }
 };
 
-window.borrarAlumno = (id) => { sistema.borrarAlumno(id); render(); };
-window.borrarCarrera = (id) => { sistema.borrarCarrera(id); render(); };
-window.asignarCarrera = (alnId, carId) => { sistema.asignar(alnId, carId); render(); };
+window.borrarAlumno = async (id) => { 
+    await fetch(`${API_URL}/alumnos/${id}`, { method: 'DELETE' }); 
+    render(); 
+};
+
+window.borrarCarrera = async (id) => { 
+    await fetch(`${API_URL}/carreras/${id}`, { method: 'DELETE' }); 
+    render(); 
+};
+
+window.asignarCarrera = async (alnId, carId) => { 
+    await fetch(`${API_URL}/alumnos/asignar`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ alumnoId: alnId, carreraId: carId || null })
+    });
+    render(); 
+};
 
 render();
