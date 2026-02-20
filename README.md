@@ -1,1 +1,17 @@
 # ABC_Alumnos_SQL
+Script MySQL
+CREATE DATABASE IF NOT EXISTS gestion_escolar;
+USE gestion_escolar;
+
+CREATE TABLE carreras (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE alumnos (
+id INT PRIMARY KEY AUTO_INCREMENT,
+nombre VARCHAR(200) NOT NULL,
+edad INT NOT NULL,
+idCarrera INT,
+FOREIGN KEY (idCarrera) REFERENCES carreras(id) ON DELETE SET NULL
+);
