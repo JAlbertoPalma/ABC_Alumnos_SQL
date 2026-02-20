@@ -64,6 +64,17 @@ app.post('/api/alumnos', async (req, res) => {
 });
 
 //Asignar carrera
+app.put('/api/alumnos/asignar', async (req, res) => {
+    try {
+        const { alumnoId, carreraId } = req.body;
+        const conn = await mysql.createConnection(dbConfig);
+        await conn.execute('UPDATE alumnos SET carreraId = ? WHERE id = ?', [carreraId || null, alumnoId]);
+        await conn.end();
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 
 app.listen(3000, () => console.log('Servidor corriendo en http://localhost:3000'));
