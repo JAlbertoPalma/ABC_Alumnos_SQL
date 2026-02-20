@@ -17,9 +17,37 @@ const dbConfig = {
 };
 
 //Obtener alumnos
+app.get('/api/alumnos', async (req, res) => {
+    try {
+        const conn = await mysql.createConnection(dbConfig);
+        const [rows] = await conn.execute('SELECT * FROM alumnos');
+        await conn.end();
 
+        const alumnos = rows.map(r => {
+            const a = new Alumno(r.id, r.nombre, r.edad);
+            a.carreraId = r.carreraId;
+            return a;
+        });
+        res.json(alumnos);
+    } catch (err) {
+        console.error("Error en MySQL:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 //Obtener Carreras
+app.get('/api/carreras', async (req, res) => {
+    try {
+        const conn = await mysql.createConnection(dbConfig);
+        const [rows] = await conn.execute('SELECT * FROM carreras');
+        await conn.end();
+        const carreras = rows.map(r => new Carrera(r.id, r.nombre));
+        res.json(carreras);
+    } catch (err) {
+        console.error("Error en MySQL:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 
 //Agregar alumno
@@ -29,3 +57,5 @@ const dbConfig = {
 
 
 app.listen(3000, () => console.log('Servidor corriendo en http://localhost:3000'));
+
+
