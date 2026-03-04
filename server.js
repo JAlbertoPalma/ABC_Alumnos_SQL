@@ -1,6 +1,6 @@
 import express from 'express';
-import mysql from 'mysql2/promise';
 import cors from 'cors';
+import sequelize from './config/db.js';
 import { Alumno } from './models/Alumno.js';
 import { Carrera } from './models/Carrera.js';
 
@@ -8,27 +8,17 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const dbConfig = {
-    host: 'localhost',
-    user: 'root',
-    password: 'root', 
-    database: 'gestion_escolar'
-};
+//Sincronizamos los modelos con la bbdd
+sequelize.sync({ alter: true})
+.then(() => console.log('Base de datos sincronizada'))
+.catch(err => console.error('Error al sincronizar', err));
 
 //Obtener alumnos
 app.get('/api/alumnos', async (req, res) => {
-    try {
-        const conn = await mysql.createConnection(dbConfig);
-        const [rows] = await conn.execute('SELECT * FROM alumnos');
-        await conn.end();
-
-        const alumnos = rows.map(r => {
-            const a = new Alumno(r.id, r.nombre, r.edad);
-            a.idCarrera = r.idCarrera; // <- Nombre unificado
-            return a;
-        });
+    try{
+        const alumnos = await Alumno.findAll();
         res.json(alumnos);
-    } catch (err) {
+    }catch(err){
         res.status(500).json({ error: err.message });
     }
 });
@@ -36,11 +26,8 @@ app.get('/api/alumnos', async (req, res) => {
 //Agregar alumno
 app.post('/api/alumnos', async (req, res) => {
     try {
-        const { nombre, edad } = req.body;
-        const conn = await mysql.createConnection(dbConfig);
-        const [result] = await conn.execute('INSERT INTO alumnos (nombre, edad) VALUES (?, ?)', [nombre, edad]);
-        await conn.end();
-        res.json({ id: result.insertId, nombre, edad });
+        const nuevoAlumno = await Alumno.create(req.body);
+        res.json(nuevoAlumno);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -49,65 +36,49 @@ app.post('/api/alumnos', async (req, res) => {
 //Borrar Alumno
 app.delete('/api/alumnos/:id', async (req, res) => {
     try {
-        const conn = await mysql.createConnection(dbConfig);
-        await conn.execute('DELETE FROM alumnos WHERE id = ?', [req.params.id]);
-        await conn.end();
+        await Alumno.destroy({ where: { id: req.params.id } });
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-//Asignar carrera
+//Asignar carrera (PUT)
 app.put('/api/alumnos/asignar', async (req, res) => {
     try {
-        const { alumnoId, idCarrera } = req.body; // <- Nombre unificado
-        const conn = await mysql.createConnection(dbConfig);
-        await conn.execute('UPDATE alumnos SET idCarrera = ? WHERE id = ?', [idCarrera || null, alumnoId]);
-        await conn.end();
+        const { alumnoId, idCarrera } = req.body;
+        await Alumno.update({ idCarrera }, { where: { id: alumnoId } });
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-//Obtener Careras
+//Obtener carreras
 app.get('/api/carreras', async (req, res) => {
     try {
-        const conn = await mysql.createConnection(dbConfig);
-        const [rows] = await conn.execute('SELECT * FROM carreras');
-        await conn.end();
-        const carreras = rows.map(r => new Carrera(r.id, r.nombre));
+        const carreras = await Carrera.findAll();
         res.json(carreras);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-//Agregar carrera
+//Crear carreras
 app.post('/api/carreras', async (req, res) => {
     try {
-        const { nombre } = req.body;
-        const conn = await mysql.createConnection(dbConfig);
-        const [result] = await conn.execute('INSERT INTO carreras (nombre) VALUES (?)', [nombre]);
-        await conn.end();
-        res.json({ id: result.insertId, nombre });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+        const nueva = await Carrera.create(req.body);
+        res.json(nueva);
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 //Borrar carreras
 app.delete('/api/carreras/:id', async (req, res) => {
     try {
-        const conn = await mysql.createConnection(dbConfig);
-        await conn.execute('DELETE FROM carreras WHERE id = ?', [req.params.id]);
-        await conn.end();
+        await Carrera.destroy({ where: { id: req.params.id } });
         res.json({ success: true });
-    } catch (err) {
-        console.error("Error borrando carrera:", err);
-        res.status(500).json({ error: err.message });
-    }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+//Puerto a escuchar para el cliente
 app.listen(3000, () => console.log('Servidor corriendo en http://localhost:3000'));
+
+

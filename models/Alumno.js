@@ -1,8 +1,22 @@
-export class Alumno {
-    constructor(id, nombre, edad) {
-        this.id = id;
-        this.nombre = nombre;
-        this.edad = edad;
-        this.idCarrera = null;
+import { DataTypes } from "sequelize";
+import sequelize from "../config/db.js";
+import { Carrera } from "./Carrera.js";
+
+export const Alumno = sequelize.define('Alumno', {
+    nombre: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    edad: {
+        type: DataTypes.INTEGER,
+        allowNull: false
     }
-}
+}, { 
+    tableName: 'alumnos',
+    timestamps: false 
+});
+
+Alumno.belongsTo(Carrera, { 
+    foreignKey: 'idCarrera', 
+    onDelete: 'SET NULL' 
+});
