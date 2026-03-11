@@ -78,6 +78,30 @@ app.delete('/api/carreras/:id', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.get('/api/alumnos/:id', async (req, res) => {
+    try {
+        const alumno = await Alumno.findByPk(req.params.id);
+        if (alumno) {
+            res.json(alumno);
+        } else {
+            res.status(404).json({ error: "Estudiante no encontrado" });
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/alumnos/carrera/:idCarrera', async (req, res) => {
+    try {
+        const alumnos = await Alumno.findAll({ 
+            where: { idCarrera: req.params.idCarrera } 
+        });
+        res.json(alumnos);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 //Puerto a escuchar para el cliente
 app.listen(3000, () => console.log('Servidor corriendo en http://localhost:3000'));
 
